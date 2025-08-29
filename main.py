@@ -3,8 +3,8 @@ import json
 import requests
 
 def create_ollama_chatbot(system_prompt: str):
-    OLLAMA_API_URL = "http://localhost:11434/api/chat"  # Default Ollama server URL
-    MODEL_NAME = "mistral"  # Or another model you have pulled (e.g., "mistral", "deepseek-coder")
+    OLLAMA_API_URL = "http://localhost:11434/api/chat" 
+    MODEL_NAME = "mistral"  
 
     def chat(user_message: str):
         payload = {
@@ -33,11 +33,9 @@ def create_ollama_chatbot(system_prompt: str):
 
 
 if __name__ == "__main__":
-    # Load knowledge base from JSON
     with open("blackcoffer.json", "r", encoding="utf-8") as f:
         company_data = json.load(f)
 
-    # Combine all company data into a single knowledge base string
     knowledge_base = "\n".join(
         [f"{item['title']}: {item['text']} (Source: {item['url']})" for item in company_data]
     )
