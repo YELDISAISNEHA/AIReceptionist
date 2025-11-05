@@ -7,8 +7,8 @@ st.set_page_config(page_title="AI Receptionist", page_icon="🤖")
 st.title("🤖 AI Receptionist - Blackcoffer")
 
 # ---------- Supabase Connection ----------
-url = st.secrets["SUPABASE_URL"]
-key = st.secrets["SUPABASE_KEY"]
+url = os.getenv("SUPABASE_URL")
+key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
 # ---------- Generate Response ----------
