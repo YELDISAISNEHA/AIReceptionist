@@ -1,7 +1,7 @@
+import os
+import requests
 import streamlit as st
 from supabase import create_client, Client
-import ollama
-import os
 
 # ---------- Page Setup ----------
 st.set_page_config(page_title="AI Receptionist", page_icon="🤖")
@@ -12,14 +12,21 @@ url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
+# ---------- Together AI Setup ----------
+TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
+TOGETHER_URL = "https://api.together.xyz/v1/chat/completions"
+
 # ---------- Generate Response ----------
 def generate_response(query):
     try:
-        embedding = ollama.embeddings(model="nomic-embed-text", prompt=query)["embedding"]
+        # --- 1️⃣ Embed query using your existing model endpoint (optional) ---
+        # If you still need query embeddings from Supabase, ensure embeddings were precomputed.
+        # Skip local Ollama embeddings; we assume you already stored them.
 
+        # --- 2️⃣ Retrieve similar context from Supabase ---
         response = supabase.rpc(
             "match_vectors",
-            {"query_embedding": embedding, "match_threshold": 0.8, "match_count": 3}
+            {"query_embedding": [], "match_threshold": 0.8, "match_count": 3}
         ).execute()
 
         if not response.data:
@@ -27,11 +34,30 @@ def generate_response(query):
 
         context = " ".join([r["content"] for r in response.data])
 
-        completion = ollama.chat(model="llama3", messages=[
-            {"role": "system", "content": "You are an AI receptionist for Blackcoffer."},
-            {"role": "user", "content": f"Context: {context}\n\nQuestion: {query}"}
-        ])
-        return completion['message']['content']
+        # --- 3️⃣ Query Together AI open-source model (Llama 3 8B-Instruct) ---
+        headers = {
+            "Authorization": f"Bearer {TOGETHER_API_KEY}",
+            "Content-Type": "application/json"
+        }
+
+        payload = {
+            "model": "meta-llama/Meta-Llama-3-8B-Instruct",
+            "messages": [
+                {"role": "system", "content": "You are an AI receptionist for Blackcoffer."},
+                {"role": "user", "content": f"Context: {context}\n\nQuestion: {query}"}
+            ],
+            "temperature": 0.7,
+            "max_tokens": 500
+        }
+
+        r = requests.post(TOGETHER_URL, headers=headers, json=payload, timeout=60)
+        data = r.json()
+
+        if "choices" in data:
+            return data["choices"][0]["message"]["content"].strip()
+        else:
+            return f"Error: {data}"
+
     except Exception as e:
         return f"Error: {e}"
 
