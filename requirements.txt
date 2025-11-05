@@ -1,0 +1,5 @@
+streamlit
+supabase
+ollama
+beautifulsoup4
+pandas
