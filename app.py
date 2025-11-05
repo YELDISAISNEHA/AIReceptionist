@@ -1,6 +1,7 @@
 import streamlit as st
 from supabase import create_client, Client
 import ollama
+import os
 
 # ---------- Page Setup ----------
 st.set_page_config(page_title="AI Receptionist", page_icon="🤖")
